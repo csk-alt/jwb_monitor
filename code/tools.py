@@ -4,9 +4,6 @@ from dataclasses import dataclass
 import time
 import sqlite3
 
-tid = 0
-tid_update = 0
-
 time_form = "%Y-%m-%d %H:%M:%S"
 
 @dataclass
@@ -33,17 +30,9 @@ def getinfo(id_token: str):
 def add_db(client: moni_client):
     "向db中增加条目"
     
-    t_hour = int(time.time()/3600)
-    
-    if(t_hour > tid_update):
-        tid_update = t_hour
-        tid = 0
-    assert tid < 0x1000
-    pid = int(t_hour/3600)<<3 + tid
-    tid += 1
     
     with sqlite3.connect('database.db') as conn:
-        conn.execute("CREATE TABLE IF NOT EXISTS users( ID          INT       PRIMARY KEY       NOT NULL,\
+        conn.execute("CREATE TABLE IF NOT EXISTS users( ID          INTEGER       PRIMARY KEY     AUTOINCREMENT     NOT NULL,\
                                                         Name        TEXT                        NOT NULL, \
                                                         StudentID   CHAR(12),\
                                                         Collage     TEXT,\
@@ -53,9 +42,9 @@ def add_db(client: moni_client):
          )")
         cursor = conn.cursor()
         if client.collage:
-            cursor.execute("INSERT INTO users (ID, Name, StudentID, Type, Collage, Purpose) VALUES (?,?,?,?,?,?)", (pid, client.name, client.id, client.type, client.collage, client.purpose))
+            cursor.execute("INSERT INTO users (Name, StudentID, Type, Collage, Purpose) VALUES (?,?,?,?,?)", (client.name, client.id, client.type, client.collage, client.purpose))
         else:
-            cursor.execute("INSERT INTO users (ID, Name, StudentID, Type, Purpose) VALUES (?,?,?,?,?,?)", (pid, client.name, client.id, client.type, client.purpose))
+            cursor.execute("INSERT INTO users (Name, StudentID, Type, Purpose) VALUES (?,?,?,?,?)", (client.name, client.id, client.type, client.purpose))
         conn.commit()
         
 def read_db():
