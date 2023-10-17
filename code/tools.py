@@ -32,30 +32,30 @@ def getinfo(id_token: str):
 
 def add_db(client: moni_client):
     "向db中增加条目"
-    t = int(time.time())
-    t_hour = int(t/3600)
+    
+    t_hour = int(time.time()/3600)
     
     if(t_hour > tid_update):
         tid_update = t_hour
         tid = 0
     assert tid < 0x1000
-    pid = int(t/3600)<<3 + tid
+    pid = int(t_hour/3600)<<3 + tid
     tid += 1
     
     with sqlite3.connect('database.db') as conn:
-        conn.execute(("CREATE TABLE IF NOT EXISTS users(ID          INT(12)       PRIMARY KEY      NOT NULL,\
+        conn.execute("CREATE TABLE IF NOT EXISTS users( ID          INT       PRIMARY KEY       NOT NULL,\
                                                         Name        TEXT                        NOT NULL, \
-                                                        StudentID   TEXT,\
+                                                        StudentID   CHAR(12),\
                                                         Collage     TEXT,\
                                                         Purpose     TEXT,\
-                                                        Time        INT                         NOT NULL,\
-                                                        Type        TEXT,\
-         )"))
+                                                        Time        TIMESTAMP                   NOT NULL    DEFAULT (datetime(CURRENT_TIMESTAMP,'localtime')),\
+                                                        Type        TEXT\
+         )")
         cursor = conn.cursor()
         if client.collage:
-            cursor.execute("INSERT INTO users (ID, Name, StudentID, Type, Collage, Purpose, Time) VALUES (?,?,?,?,?,?)", (pid, client.name, client.id, client.type, client.collage, client.purpose, t))
+            cursor.execute("INSERT INTO users (ID, Name, StudentID, Type, Collage, Purpose) VALUES (?,?,?,?,?,?)", (pid, client.name, client.id, client.type, client.collage, client.purpose))
         else:
-            cursor.execute("INSERT INTO users (ID, Name, StudentID, Type, Purpose, Time) VALUES (?,?,?,?,?,?)", (pid, client.name, client.id, client.type, client.purpose, t))
+            cursor.execute("INSERT INTO users (ID, Name, StudentID, Type, Purpose) VALUES (?,?,?,?,?,?)", (pid, client.name, client.id, client.type, client.purpose))
         conn.commit()
         
 def read_db():
